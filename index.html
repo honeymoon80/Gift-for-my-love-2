@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Matrix Romántica — Para May 💗</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;1,400&family=Courier+Prime&family=Cormorant+Garamond:ital,wght@0,300;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     CANVAS MATRIX (fondo, frases + caracteres cayendo)
+════════════════════════════════════════════ -->
+<canvas id="matrixCanvas" class="matrix-canvas"></canvas>
+
+<!-- ════════════════════════════════════════════
+     CANVAS DE PARTÍCULAS DE CLIC (overlay global)
+════════════════════════════════════════════ -->
+<canvas id="clickFxCanvas" class="click-fx-canvas"></canvas>
+
+<!-- ════════════════════════════════════════════
+     TERMINAL — esquina superior izquierda
+════════════════════════════════════════════ -->
+<div id="terminalBox" class="terminal-box hidden">
+  <div class="terminal-header">
+    <span class="terminal-dot dot-red"></span>
+    <span class="terminal-dot dot-yellow"></span>
+    <span class="terminal-dot dot-green"></span>
+    <span class="terminal-header-label">may_love.sh</span>
+  </div>
+  <div class="terminal-body" id="terminalBody"></div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     FRASES CENTRALES (efecto máquina de escribir)
+════════════════════════════════════════════ -->
+<div id="centerPhraseWrap" class="center-phrase-wrap">
+  <div class="center-phrase-card">
+    <div class="center-phrase-text" id="centerPhraseText"></div>
+    <span class="center-phrase-cursor" id="centerPhraseCursor">|</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     CELEBRACIÓN FINAL
+════════════════════════════════════════════ -->
+<div id="finalScreen" class="final-screen hidden">
+  <canvas id="finalConfettiCanvas" class="final-confetti-canvas"></canvas>
+  <div class="final-hearts-bg" id="finalHeartsBg"></div>
+  <div class="final-content">
+    <div class="final-titulo" id="finalTitulo"></div>
+    <div class="final-photo-frame">
+      <img class="final-photo" id="finalPhoto" src="" alt="Foto de aniversario">
+    </div>
+    <div class="final-subtitulo" id="finalSubtitulo"></div>
+    <div class="final-mensaje" id="finalMensaje"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     REPRODUCTOR DE MÚSICA — esquina inferior derecha
+════════════════════════════════════════════ -->
+<div class="player-wrap" id="playerWrap">
+  <button class="player-toggle" id="playerToggle">🎵</button>
+  <div class="player-panel" id="playerPanel">
+    <div class="player-disc" id="playerDisc">
+      <div class="player-disc-inner">♪</div>
+    </div>
+    <div class="player-song-name" id="playerSongName">Cargando...</div>
+    <div class="player-progress-row">
+      <span class="player-time" id="playerCurTime">0:00</span>
+      <div class="player-progress-track" id="playerProgressTrack">
+        <div class="player-progress-fill" id="playerProgressFill"></div>
+        <div class="player-progress-thumb" id="playerProgressThumb"></div>
+      </div>
+      <span class="player-time" id="playerTotalTime">0:00</span>
+    </div>
+    <div class="player-controls">
+      <button class="player-btn" id="playerPrev">⏮</button>
+      <button class="player-btn player-play" id="playerPlay">▶</button>
+      <button class="player-btn" id="playerNext">⏭</button>
+    </div>
+    <div class="player-vol-row">
+      <span class="player-vol-icon">🔈</span>
+      <input type="range" id="playerVol" class="player-vol-slider" min="0" max="1" step="0.01" value="0.7">
+    </div>
+    <button class="player-list-btn" id="playerListBtn">Lista de canciones ▾</button>
+    <div class="player-song-list hidden" id="playerSongList"></div>
+  </div>
+</div>
+<audio id="matrixAudio"></audio>
+
+<script src="config.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
