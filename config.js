@@ -37,7 +37,7 @@ const CONFIG = {
     ],
     // Caracteres sueltos que también caen (letras, números, emojis)
     // Se repiten varias veces los binarios (0 y 1) para que predominen en la mezcla
-    caracteres: "01010101010101010101ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789💗✨🌸❤️💕🌷💫🌹",
+    caracteres: "01010101010101010101ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789💗✨🌸❤️💕🌷💫🌹💞🩷💐",
     fallSpeed: 0.8,        // Velocidad de caída (mayor = más rápido)
     density: 1,            // Cantidad de columnas activas (0 a 1) — al máximo
     fontSize: 14,           // Tamaño de letra de los caracteres sueltos
@@ -46,7 +46,7 @@ const CONFIG = {
     opacityMax: 0.6,        // Opacidad máxima
     color: "#FFB6C1",       // Color principal de los caracteres
     useGradient: true,      // Si los colores varían entre los de la paleta (colors.*)
-    stringLength: 6,        // Longitud de cada cadena de caracteres que cae por columna
+    stringLength: 12,        // Longitud de cada cadena de caracteres que cae por columna
   },
 
   // ╔══════════════════════════════════════════╗
