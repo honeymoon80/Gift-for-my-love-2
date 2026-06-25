@@ -115,6 +115,7 @@ function setupMatrixColumns() {
   const cfg = CONFIG.matrixFalling;
   const colWidth = cfg.fontSize + 4;
   const totalCols = Math.ceil(window.innerWidth / colWidth);
+  const strLen = cfg.stringLength || 1;
 
   matrixColumns = [];
   for (let i = 0; i < totalCols; i++) {
@@ -124,7 +125,7 @@ function setupMatrixColumns() {
       x: i * colWidth,
       y: active ? Math.random() * -window.innerHeight : -9999, // las inactivas esperan fuera de pantalla
       speed: (Math.random() * 0.6 + 0.7) * cfg.fallSpeed,
-      char: randomMatrixChar(),
+      chars: buildCharChain(strLen),  // cadena de varios caracteres que caen juntos
       color: getMatrixColor(),
       opacity: randomOpacity(),
       changeTimer: Math.random() * 30,
@@ -137,6 +138,13 @@ function setupMatrixColumns() {
   for (let i = 0; i < fraseCount; i++) {
     matrixFraseDrops.push(spawnFraseDrop(true));
   }
+}
+
+// Crea una cadena de N caracteres aleatorios (la "estela" vertical de cada columna)
+function buildCharChain(length) {
+  const chain = [];
+  for (let i = 0; i < length; i++) chain.push(randomMatrixChar());
+  return chain;
 }
 
 function randomMatrixChar() {
@@ -175,26 +183,36 @@ function loopMatrixBackground() {
     matrixCtx.fillStyle = 'rgba(26,10,26,0.18)';
     matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
 
-    // ── Caracteres sueltos ──
+    // ── Caracteres sueltos (cadenas verticales tipo Matrix) ──
     matrixCtx.font = `${cfg.fontSize}px monospace`;
     matrixCtx.textAlign = 'center';
     matrixCtx.textBaseline = 'middle';
+    const charSpacing = cfg.fontSize + 4;
     matrixColumns.forEach(col => {
       if (col.y < -1000) return; // columna inactiva, no se dibuja ni avanza
       col.y += col.speed;
       col.changeTimer--;
       if (col.changeTimer <= 0) {
-        col.char = randomMatrixChar();
+        // Cambia un carácter aleatorio dentro de la cadena (efecto "parpadeo" típico del Matrix)
+        const idx = Math.floor(Math.random() * col.chars.length);
+        col.chars[idx] = randomMatrixChar();
         col.changeTimer = Math.random()*30 + 15;
       }
       if (col.y > window.innerHeight + 20) {
         col.y = -20;
         col.opacity = randomOpacity();
         col.color = getMatrixColor();
+        col.chars = buildCharChain(col.chars.length);
       }
-      matrixCtx.globalAlpha = col.opacity;
-      matrixCtx.fillStyle = col.color;
-      matrixCtx.fillText(col.char, col.x, col.y);
+      // Dibuja toda la cadena: el primer carácter (cabeza) más brillante, los demás se desvanecen
+      for (let c = 0; c < col.chars.length; c++) {
+        const charY = col.y - c * charSpacing;
+        if (charY < -20 || charY > window.innerHeight + 20) continue;
+        const fade = 1 - (c / col.chars.length) * 0.85;
+        matrixCtx.globalAlpha = col.opacity * fade;
+        matrixCtx.fillStyle = c === 0 ? '#ffffff' : col.color;
+        matrixCtx.fillText(col.chars[c], col.x, charY);
+      }
     });
 
     // ── Frases cayendo ──
@@ -226,32 +244,28 @@ function startTerminalTyping() {
   const cfg = CONFIG.terminal;
   let lineIdx = 0;
 
-  function typeLine() {
+  function showLine() {
     if (lineIdx >= cfg.lines.length) return;
     const line = cfg.lines[lineIdx];
     const lineEl = document.createElement('div');
     lineEl.className = 'terminal-line';
+    lineEl.textContent = line; // la línea aparece completa de una sola vez
     terminalBody.appendChild(lineEl);
 
-    let charIdx = 0;
-    const typeChar = () => {
-      if (charIdx <= line.length) {
-        lineEl.textContent = line.slice(0, charIdx);
-        charIdx++;
-        setTimeout(typeChar, cfg.typingSpeed);
-      } else {
-        lineIdx++;
-        setTimeout(typeLine, cfg.lineDelay);
-      }
-    };
-    typeChar();
+    lineIdx++;
+    setTimeout(showLine, cfg.lineDelay);
   }
-  typeLine();
+  showLine();
 }
 
 // ════════════════════════════════════════════
 // FRASES CENTRALES — efecto máquina de escribir
 // ════════════════════════════════════════════
+// Bandera global: true cuando el sistema está esperando un clic del usuario
+// para avanzar a la siguiente frase central (lo usa el listener de clic global).
+let waitingForPhraseAdvance = false;
+let advanceToNextPhrase = null; // función que avanza, asignada dinámicamente
+
 function startCenterPhrasesSequence() {
   const frases = CONFIG.frases;
   const typingSpeed = CONFIG.fraseTypingSpeed;
@@ -260,11 +274,12 @@ function startCenterPhrasesSequence() {
 
   function typeFrase() {
     if (fraseIdx >= frases.length) {
-      // Todas las frases terminaron -> mostrar celebración final
+      // Todas las frases terminaron -> mostrar celebración final (automático, sin clic)
       setTimeout(showFinalCelebration, 600);
       return;
     }
     const frase = frases[fraseIdx];
+    const isLastFrase = fraseIdx === frases.length - 1;
     let charIdx = 0;
     centerPhraseText.textContent = '';
 
@@ -274,8 +289,19 @@ function startCenterPhrasesSequence() {
         charIdx++;
         setTimeout(typeChar, typingSpeed);
       } else {
+        // La frase terminó de escribirse completamente.
         fraseIdx++;
-        setTimeout(typeFrase, delay);
+        if (isLastFrase) {
+          // Última frase: pasa sola a la celebración, sin esperar clic.
+          setTimeout(typeFrase, delay);
+        } else {
+          // Frases intermedias: esperar un clic en cualquier parte para avanzar.
+          // No se muestra ningún mensaje/indicador visual, solo se activa la bandera.
+          setTimeout(() => {
+            waitingForPhraseAdvance = true;
+            advanceToNextPhrase = typeFrase;
+          }, delay);
+        }
       }
     };
     typeChar();
@@ -390,12 +416,25 @@ function bindClickParticles() {
   document.addEventListener('click', e => {
     if (e.target.closest('.player-wrap, .terminal-box, button, input')) return;
     spawnClickParticles(e.clientX, e.clientY, 12);
+    tryAdvancePhraseOnClick();
   });
   document.addEventListener('touchstart', e => {
     if (e.target.closest('.player-wrap, .terminal-box, button, input')) return;
     const t = e.touches[0];
     spawnClickParticles(t.clientX, t.clientY, 12);
+    tryAdvancePhraseOnClick();
   }, {passive:true});
+}
+
+// Si el sistema está esperando un clic para avanzar de frase, lo dispara aquí.
+// No muestra ningún mensaje ni indicador visual, solo avanza en silencio.
+function tryAdvancePhraseOnClick() {
+  if (waitingForPhraseAdvance && advanceToNextPhrase) {
+    waitingForPhraseAdvance = false;
+    const advance = advanceToNextPhrase;
+    advanceToNextPhrase = null;
+    advance();
+  }
 }
 
 function spawnClickParticles(x, y, count) {
